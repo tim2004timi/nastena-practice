@@ -2,7 +2,7 @@
 
 ## Auth
 
-### POST /api/auth/token
+### POST /api/auth/token application/x-www-form-urlencoded
 **Входные данные:**
 - `username`: str (form data)
 - `password`: str (form data)

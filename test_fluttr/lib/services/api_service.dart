@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -56,12 +57,20 @@ class ApiService {
 
   // GET запрос
   Future<dynamic> get(String endpoint, {bool includeAuth = true}) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    final response = await http.get(
-      url,
-      headers: _getHeaders(includeAuth: includeAuth),
-    );
-    return _handleResponse(response);
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      final response = await http.get(
+        url,
+        headers: _getHeaders(includeAuth: includeAuth),
+      );
+      return _handleResponse(response);
+    } on SocketException catch (e) {
+      throw Exception('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+    } on HttpException catch (e) {
+      throw Exception('Ошибка HTTP: ${e.message}');
+    } catch (e) {
+      throw Exception('Ошибка сети: ${e.toString()}');
+    }
   }
 
   // POST запрос
@@ -71,35 +80,43 @@ class ApiService {
     bool includeAuth = true,
     bool isFormData = false,
   }) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    http.Response response;
-    
-    if (isFormData) {
-      // Для form data (используется в /api/auth/token)
-      // application/x-www-form-urlencoded
-      final headers = <String, String>{
-        'Content-Type': 'application/x-www-form-urlencoded',
-      };
-      if (includeAuth && _token != null) {
-        headers['Authorization'] = 'Bearer $_token';
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      http.Response response;
+      
+      if (isFormData) {
+        // Для form data (используется в /api/auth/token)
+        // application/x-www-form-urlencoded
+        final headers = <String, String>{
+          'Content-Type': 'application/x-www-form-urlencoded',
+        };
+        if (includeAuth && _token != null) {
+          headers['Authorization'] = 'Bearer $_token';
+        }
+        // Для form data отправляем как Map<String, String>
+        // Пакет http автоматически закодирует это в application/x-www-form-urlencoded
+        final formBody = body?.map((key, value) => MapEntry(key, value.toString()));
+        response = await http.post(
+          url,
+          headers: headers,
+          body: formBody,
+        );
+      } else {
+        response = await http.post(
+          url,
+          headers: _getHeaders(includeAuth: includeAuth),
+          body: body != null ? json.encode(body) : null,
+        );
       }
-      // Для form data отправляем как Map<String, String>
-      // Пакет http автоматически закодирует это в application/x-www-form-urlencoded
-      final formBody = body?.map((key, value) => MapEntry(key, value.toString()));
-      response = await http.post(
-        url,
-        headers: headers,
-        body: formBody,
-      );
-    } else {
-      response = await http.post(
-        url,
-        headers: _getHeaders(includeAuth: includeAuth),
-        body: body != null ? json.encode(body) : null,
-      );
+      
+      return _handleResponse(response);
+    } on SocketException catch (e) {
+      throw Exception('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+    } on HttpException catch (e) {
+      throw Exception('Ошибка HTTP: ${e.message}');
+    } catch (e) {
+      throw Exception('Ошибка сети: ${e.toString()}');
     }
-    
-    return _handleResponse(response);
   }
 
   // PUT запрос
@@ -108,23 +125,39 @@ class ApiService {
     Map<String, dynamic>? body, {
     bool includeAuth = true,
   }) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    final response = await http.put(
-      url,
-      headers: _getHeaders(includeAuth: includeAuth),
-      body: body != null ? json.encode(body) : null,
-    );
-    return _handleResponse(response);
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      final response = await http.put(
+        url,
+        headers: _getHeaders(includeAuth: includeAuth),
+        body: body != null ? json.encode(body) : null,
+      );
+      return _handleResponse(response);
+    } on SocketException catch (e) {
+      throw Exception('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+    } on HttpException catch (e) {
+      throw Exception('Ошибка HTTP: ${e.message}');
+    } catch (e) {
+      throw Exception('Ошибка сети: ${e.toString()}');
+    }
   }
 
   // DELETE запрос
   Future<void> delete(String endpoint, {bool includeAuth = true}) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    final response = await http.delete(
-      url,
-      headers: _getHeaders(includeAuth: includeAuth),
-    );
-    _handleResponse(response);
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      final response = await http.delete(
+        url,
+        headers: _getHeaders(includeAuth: includeAuth),
+      );
+      _handleResponse(response);
+    } on SocketException catch (e) {
+      throw Exception('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+    } on HttpException catch (e) {
+      throw Exception('Ошибка HTTP: ${e.message}');
+    } catch (e) {
+      throw Exception('Ошибка сети: ${e.toString()}');
+    }
   }
 }
 
