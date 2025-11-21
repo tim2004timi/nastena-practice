@@ -18,7 +18,6 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Настройка CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,17 +28,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    await asyncio.sleep(2)
-
-    # Создаем таблицы при старте приложения
     await create_tables()
-    # Проверяем подключение к БД
     if await check_db_connection():
         print("✅ Database connection successful")
     else:
         print("❌ Database connection failed")
 
-# Подключаем роутеры
 main_router = APIRouter(prefix="/api")
 main_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 main_router.include_router(user_router, tags=["Users"])

@@ -1,6 +1,3 @@
-"""
-Главное приложение для управления успеваемостью студентов
-"""
 import customtkinter as ctk
 from typing import Optional
 from models import User
